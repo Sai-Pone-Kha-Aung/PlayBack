@@ -88,8 +88,9 @@
         import { FBXLoader } from './three/examples/jsm/loaders/FBXLoader.js';
 
         let mixer;
-        var modelURL = './model/Ronnie.glb';
-        var videoURL = './video/Ronnie.mkv';
+        var modelURL = './model/Dance.fbx';
+        var modelType = modelURL.split('.').pop();
+        var videoURL = './video/Dance_.mp4';
 
         const camera = new THREE.PerspectiveCamera(
             75, window.innerWidth / window.innerHeight,
@@ -166,71 +167,137 @@
 
         var loaderGLB = new GLTFLoader();
         var loaderFBX = new FBXLoader();
-        
+
+        if (modelType === 'fbx') {
+            loaderFBX.load(modelURL, function (object) {
+                scene.add(object);
+                object.scale.set(.01, .01, .01);
+
+                mixer = new THREE.AnimationMixer(object);
+                const action = mixer.clipAction(object.animations[0]);
+                action.clampWhenFinished = true;
+                action.setLoop(THREE.LoopOnce, 1);
+                function togglePlay() {
+
+                    if (video.ended) {
+                        video.muted = true;
+                        video.currentTime = 0;
+                        video.play();
+                        action.reset();
+                        action.setEffectiveWeight(1.0)
+                        action.play();
 
 
-        loaderGLB.load(modelURL, function (gltf) {
+                    }
+                    else if (video.paused) {
+                        video.muted = true;
+                        video.play();
+                        action.setEffectiveWeight(1.0)
+                        action.paused = false;
+                        action.play();
 
-            scene.add(gltf.scene);
-
-            mixer = new THREE.AnimationMixer(gltf.scene);
-            const action = mixer.clipAction(gltf.animations[0]);
-            action.clampWhenFinished = true;
-            action.setLoop(THREE.LoopOnce, 1)
-
-            function togglePlay() {
-
-                if (video.ended) {
-                    video.muted = true;
-                    video.currentTime = 0;
-                    video.play();
-                    action.reset();
-                    action.setEffectiveWeight(1.0)
-                    action.play();
-
+                    }
 
                 }
-                else if (video.paused) {
-                    video.muted = true;
-                    video.play();
-                    action.setEffectiveWeight(1.0)
-                    action.paused = false;
-                    action.play();
+
+                function toggleStop() {
+                    if (video.played) {
+                        video.pause();
+                        video.currentTime = 0
+                        action.reset();
+                        action.stop();
+                    }
+                }
+
+                const playbtn = document.getElementById("play");
+                playbtn.addEventListener("click", togglePlay
+
+                )
+                const stopbtn = document.getElementById("stop");
+                stopbtn.addEventListener("click", toggleStop
+
+                )
+
+                const pause = document.getElementById("pause");
+                pause.addEventListener("click", function (e) {
+                    if (video.played) {
+                        video.pause();
+                        action.paused = true;
+                    }
+                })
+
+
+                console.log(object);
+                animate()
+            })
+        }
+        else if (modelType === 'glb') {
+            loaderGLB.load(modelURL, function (gltf) {
+
+                scene.add(gltf.scene);
+
+                mixer = new THREE.AnimationMixer(gltf.scene);
+                const action = mixer.clipAction(gltf.animations[0]);
+                action.clampWhenFinished = true;
+                action.setLoop(THREE.LoopOnce, 1)
+
+                function togglePlay() {
+
+                    if (video.ended) {
+                        video.muted = true;
+                        video.currentTime = 0;
+                        video.play();
+                        action.reset();
+                        action.setEffectiveWeight(1.0)
+                        action.play();
+
+
+                    }
+                    else if (video.paused) {
+                        video.muted = true;
+                        video.play();
+                        action.setEffectiveWeight(1.0)
+                        action.paused = false;
+                        action.play();
+
+                    }
 
                 }
 
-            }
-
-            function toggleStop() {
-                if (video.played) {
-                    video.pause();
-                    video.currentTime = 0
-                    action.reset();
-                    action.stop();
+                function toggleStop() {
+                    if (video.played) {
+                        video.pause();
+                        video.currentTime = 0
+                        action.reset();
+                        action.stop();
+                    }
                 }
-            }
 
-            const playbtn = document.getElementById("play");
-            playbtn.addEventListener("click", togglePlay
+                const playbtn = document.getElementById("play");
+                playbtn.addEventListener("click", togglePlay
 
-            )
-            const stopbtn = document.getElementById("stop");
-            stopbtn.addEventListener("click", toggleStop
+                )
+                const stopbtn = document.getElementById("stop");
+                stopbtn.addEventListener("click", toggleStop
 
-            )
+                )
 
-            const pause = document.getElementById("pause");
-            pause.addEventListener("click", function (e) {
-                if (video.played) {
-                    video.pause();
-                    action.paused = true;
-                }
+                const pause = document.getElementById("pause");
+                pause.addEventListener("click", function (e) {
+                    if (video.played) {
+                        video.pause();
+                        action.paused = true;
+                    }
+                })
+
+                console.log(gltf);
+
+                animate()
             })
 
-            console.log(gltf);
-
-            animate()
-        })
+        } else {
+            console.error('Error loading')
+        }
 
 
         const clock = new THREE.Clock()
